@@ -134,7 +134,14 @@ fi
 
 eval set -- "${OPTS}"
 
-PARALLEL="$(($(nproc) / 4 + 1))"
+if command -v nproc > /dev/null 2>&1; then
+    NCPU=$(nproc)
+else
+    NCPU=$(sysctl -n hw.ncpu)
+fi
+
+
+PARALLEL="$((NCPU / 4 + 1))"
 BUILD_FE=0
 BUILD_BE=0
 BUILD_BROKER=0
@@ -499,6 +506,36 @@ if [[ "${BUILD_BE}" -eq 1 ]]; then
 
     mkdir -p "${CMAKE_BUILD_DIR}"
     cd "${CMAKE_BUILD_DIR}"
+
+    echo "Executing build command"
+    echo "${CMAKE_CMD}" -G "${GENERATOR}" \
+        -DCMAKE_MAKE_PROGRAM="${MAKE_PROGRAM}" \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+        -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
+        -DMAKE_TEST=OFF \
+        -DBUILD_FS_BENCHMARK="${BUILD_FS_BENCHMARK}" \
+        ${CMAKE_USE_CCACHE:+${CMAKE_USE_CCACHE}} \
+        -DWITH_MYSQL="${WITH_MYSQL}" \
+        -DWITH_LZO="${WITH_LZO}" \
+        -DUSE_LIBCPP="${USE_LIBCPP}" \
+        -DBUILD_META_TOOL="${BUILD_META_TOOL}" \
+        -DBUILD_INDEX_TOOL="${BUILD_INDEX_TOOL}" \
+        -DSTRIP_DEBUG_INFO="${STRIP_DEBUG_INFO}" \
+        -DUSE_DWARF="${USE_DWARF}" \
+        -DUSE_UNWIND="${USE_UNWIND}" \
+        -DDISPLAY_BUILD_TIME="${DISPLAY_BUILD_TIME}" \
+        -DENABLE_PCH="${ENABLE_PCH}" \
+        -DUSE_MEM_TRACKER="${USE_MEM_TRACKER}" \
+        -DUSE_JEMALLOC="${USE_JEMALLOC}" \
+        -DUSE_BTHREAD_SCANNER="${USE_BTHREAD_SCANNER}" \
+        -DENABLE_STACKTRACE="${ENABLE_STACKTRACE}" \
+        -DUSE_AVX2="${USE_AVX2}" \
+        -DGLIBC_COMPATIBILITY="${GLIBC_COMPATIBILITY}" \
+        -DEXTRA_CXX_FLAGS="${EXTRA_CXX_FLAGS}" \
+        -DENABLE_CLANG_COVERAGE="${DENABLE_CLANG_COVERAGE}" \
+        -DDORIS_JAVA_HOME="${JAVA_HOME}" \
+        "${DORIS_HOME}/be"
+    
     "${CMAKE_CMD}" -G "${GENERATOR}" \
         -DCMAKE_MAKE_PROGRAM="${MAKE_PROGRAM}" \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
