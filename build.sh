@@ -33,6 +33,17 @@ export DORIS_HOME="${ROOT}"
 
 . "${DORIS_HOME}/env.sh"
 
+if [[ "$(uname)" == "Darwin" ]]; then
+    # 检查是否已经安装了 GNU getopt
+    if brew list gnu-getopt > /dev/null 2>&1; then
+        # 将 GNU getopt 添加到 PATH 前面
+        PATH="/opt/homebrew/opt/gnu-getopt/bin:$PATH"
+    else
+        echo "Error: GNU getopt is not installed. Please install it using 'brew install gnu-getopt'"
+        exit 1
+    fi
+fi
+
 # Check args
 usage() {
     echo "
